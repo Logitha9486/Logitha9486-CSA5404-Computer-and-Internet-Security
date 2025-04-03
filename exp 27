@@ -1,0 +1,144 @@
+import java.util.Arrays;
+import java.util.Comparator;
+
+public class TranspositionCiphers {
+
+    // ===== RAIL FENCE CIPHER =====
+    public static String railFenceEncrypt(String text, int key) {
+        char[][] rail = new char[key][text.length()];
+        boolean directionDown = false;
+        int row = 0, col = 0;
+
+        for (char c : text.toCharArray()) {
+            if (row == 0 || row == key - 1) directionDown = !directionDown;
+            rail[row][col++] = c;
+            row += directionDown ? 1 : -1;
+        }
+
+        StringBuilder result = new StringBuilder();
+        for (char[] line : rail) {
+            for (char ch : line) {
+                if (ch != 0) result.append(ch);
+            }
+        }
+        return result.toString();
+    }
+
+    public static String railFenceDecrypt(String cipher, int key) {
+        char[][] rail = new char[key][cipher.length()];
+        boolean directionDown;
+        int row = 0, col = 0;
+
+        // Mark positions
+        for (int i = 0; i < cipher.length(); i++) {
+            if (row == 0) directionDown = true;
+            else if (row == key - 1) directionDown = false;
+            rail[row][col++] = '*';
+            row += directionDown ? 1 : -1;
+        }
+
+        // Fill in ciphertext
+        int index = 0;
+        for (int i = 0; i < key; i++) {
+            for (int j = 0; j < cipher.length(); j++) {
+                if (rail[i][j] == '*' && index < cipher.length()) {
+                    rail[i][j] = cipher.charAt(index++);
+                }
+            }
+        }
+
+        // Read the decrypted text
+        StringBuilder result = new StringBuilder();
+        row = col = 0;
+        for (int i = 0; i < cipher.length(); i++) {
+            if (row == 0) directionDown = true;
+            else if (row == key - 1) directionDown = false;
+            result.append(rail[row][col++]);
+            row += directionDown ? 1 : -1;
+        }
+
+        return result.toString();
+    }
+
+    // ===== ROW & COLUMN TRANSPOSITION CIPHER =====
+    public static String rowColumnEncrypt(String text, String key) {
+        int columns = key.length();
+        int rows = (int) Math.ceil((double) text.length() / columns);
+        char[][] matrix = new char[rows][columns];
+
+        // Fill matrix row-wise
+        int index = 0;
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < columns; c++) {
+                matrix[r][c] = index < text.length() ? text.charAt(index++) : 'X';
+            }
+        }
+
+        // Sort key order
+        Integer[] order = getSortedKeyOrder(key);
+
+        // Read columns based on sorted order
+        StringBuilder result = new StringBuilder();
+        for (int col : order) {
+            for (int r = 0; r < rows; r++) {
+                result.append(matrix[r][col]);
+            }
+        }
+
+        return result.toString();
+    }
+
+    public static String rowColumnDecrypt(String cipher, String key) {
+        int columns = key.length();
+        int rows = (int) Math.ceil((double) cipher.length() / columns);
+        char[][] matrix = new char[rows][columns];
+
+        // Sort key order
+        Integer[] order = getSortedKeyOrder(key);
+
+        // Fill matrix column-wise
+        int index = 0;
+        for (int col : order) {
+            for (int r = 0; r < rows; r++) {
+                matrix[r][col] = cipher.charAt(index++);
+            }
+        }
+
+        // Read row-wise to decrypt
+        StringBuilder result = new StringBuilder();
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < columns; c++) {
+                result.append(matrix[r][c]);
+            }
+        }
+
+        return result.toString().replace("X", ""); // Remove padding
+    }
+
+    private static Integer[] getSortedKeyOrder(String key) {
+        Integer[] order = new Integer[key.length()];
+        for (int i = 0; i < key.length(); i++) order[i] = i;
+        Arrays.sort(order, Comparator.comparingInt(key::charAt));
+        return order;
+    }
+
+    // ===== MAIN METHOD =====
+    public static void main(String[] args) {
+        String text = "HELLO WORLD";
+        int railFenceKey = 3;
+        String rowColKey = "3142";
+
+        // Rail Fence Cipher
+        String railEncrypted = railFenceEncrypt(text, railFenceKey);
+        String railDecrypted = railFenceDecrypt(railEncrypted, railFenceKey);
+
+        // Row & Column Transposition Cipher
+        String rowEncrypted = rowColumnEncrypt(text, rowColKey);
+        String rowDecrypted = rowColumnDecrypt(rowEncrypted, rowColKey);
+
+        // Output Results
+        System.out.println("\n=== TRANSPOSITION CIPHER RESULTS ===");
+        System.out.println("Rail Fence Cipher: " + railEncrypted + " -> " + railDecrypted);
+        System.out.println("Row & Column Transposition: " + rowEncrypted + " -> " + rowDecrypted);
+    }
+}
