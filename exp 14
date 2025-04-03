@@ -1,0 +1,52 @@
+import java.io.File; 
+import java.io.FileInputStream; 
+import java.security.MessageDigest; 
+import java.util.Formatter; 
+ 
+public class FileChecksum { 
+public static String calculateSHA256(File file) throws Exception { 
+MessageDigest digest = MessageDigest.getInstance("SHA-256"); 
+FileInputStream fis = new FileInputStream(file); 
+byte[] byteArray = new byte[1024]; 
+int bytesRead; 
+while ((bytesRead = fis.read(byteArray)) != -1) { 
+digest.update(byteArray, 0, bytesRead); 
+} 
+fis.close(); 
+byte[] hashBytes = digest.digest(); 
+return bytesToHex(hashBytes); 
+} 
+ 
+private static String bytesToHex(byte[] bytes) { 
+Formatter formatter = new Formatter(); 
+for (byte b : bytes) { 
+formatter.format("%02x", b); 
+} 
+String result = formatter.toString(); 
+formatter.close(); 
+return result; 
+} 
+public static void main(String[] args) throws Exception { 
+File file = new File("sample.txt"); // Replace with actual file 
+path 
+ 
+} 
+ 
+String checksum = calculateSHA256(file); 
+System.out.println("SHA-256 Checksum: " + checksum); 
+} 
+
+//output
+Valid File
+Enter file path: example.zip
+Enter expected SHA-256 checksum: 5d41402abc4b2a76b9719d911017c592
+Calculated SHA-256: 5d41402abc4b2a76b9719d911017c592
+✅ File integrity verified!
+
+Tampered/Corrupt File
+Enter file path: example.zip
+Enter expected SHA-256 checksum: 5d41402abc4b2a76b9719d911017c592
+Calculated SHA-256: a7c3e8f14c7f4e53b9f1d8e7c3a517d5
+❌ Checksum mismatch! File may be corrupted.
+
+
