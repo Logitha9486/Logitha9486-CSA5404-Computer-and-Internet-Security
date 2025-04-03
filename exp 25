@@ -1,0 +1,37 @@
+from scapy.all import *
+import time
+
+# Target IP and ports to test
+TARGET_IP = "192.168.1.1"  # Change this to your test machine's IP
+PORTS_TO_TEST = [22, 80, 443, 3389]  # SSH, HTTP, HTTPS, RDP
+
+def test_firewall():
+    print("\n=== Firewall Rule Tester ===")
+    
+    for port in PORTS_TO_TEST:
+        packet = IP(dst=TARGET_IP) / TCP(dport=port, flags="S")  # SYN packet
+        response = sr1(packet, timeout=2, verbose=0)
+        
+        if response:
+            if response.haslayer(TCP):
+                if response[TCP].flags == 0x12:  # SYN-ACK received (Allowed)
+                    print(f"✅ Port {port} is OPEN (Allowed)")
+                elif response[TCP].flags == 0x14:  # RST-ACK received (Closed)
+                    print(f"❌ Port {port} is CLOSED (Blocked by service)")
+            else:
+                print(f"❓ No TCP response on Port {port} (Might be filtered by firewall)")
+        else:
+            print(f"🚫 No response on Port {port} (Blocked by firewall)")
+
+        time.sleep(1)
+
+if __name__ == "__main__":
+    test_firewall()
+
+
+//output
+=== Firewall Rule Tester ===
+✅ Port 22 is OPEN (Allowed)
+🚫 No response on Port 80 (Blocked by firewall)
+❌ Port 443 is CLOSED (Blocked by service)
+❓ No TCP response on Port 3389 (Might be filtered by firewall)
