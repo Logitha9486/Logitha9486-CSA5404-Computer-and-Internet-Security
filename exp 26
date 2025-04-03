@@ -1,0 +1,104 @@
+ import numpy as np
+
+# ===== CAESAR CIPHER =====
+def caesar_cipher(text, key, encrypt=True):
+    result = ""
+    shift = key if encrypt else -key
+    for char in text:
+        if char.isalpha():
+            base = ord('A') if char.isupper() else ord('a')
+            result += chr((ord(char) - base + shift) % 26 + base)
+        else:
+            result += char
+    return result
+
+# ===== PLAYFAIR CIPHER =====
+def generate_playfair_matrix(key):
+    key = "".join(dict.fromkeys(key.upper().replace("J", "I") + "ABCDEFGHIKLMNOPQRSTUVWXYZ"))
+    return [list(key[i:i+5]) for i in range(0, 25, 5)]
+
+def find_position(matrix, letter):
+    for i, row in enumerate(matrix):
+        if letter in row:
+            return i, row.index(letter)
+
+def playfair_cipher(text, key, encrypt=True):
+    matrix = generate_playfair_matrix(key)
+    text = text.upper().replace("J", "I").replace(" ", "")
+    if len(text) % 2 != 0:
+        text += "X"
+    
+    result = ""
+    step = 1 if encrypt else -1
+    for i in range(0, len(text), 2):
+        a, b = text[i], text[i+1]
+        r1, c1 = find_position(matrix, a)
+        r2, c2 = find_position(matrix, b)
+
+        if r1 == r2:  
+            result += matrix[r1][(c1 + step) % 5] + matrix[r2][(c2 + step) % 5]
+        elif c1 == c2:  
+            result += matrix[(r1 + step) % 5][c1] + matrix[(r2 + step) % 5][c2]
+        else:  
+            result += matrix[r1][c2] + matrix[r2][c1]
+
+    return result
+
+# ===== HILL CIPHER =====
+def hill_cipher(text, key_matrix, encrypt=True):
+    text_vector = [ord(char) - ord('A') for char in text.upper()]
+    matrix_size = len(key_matrix)
+    
+    if len(text_vector) % matrix_size != 0:
+        text_vector += [ord('X') - ord('A')] * (matrix_size - len(text_vector) % matrix_size)
+
+    text_blocks = np.array(text_vector).reshape(-1, matrix_size).T
+    key_matrix = np.array(key_matrix)
+    
+    if not encrypt:
+        key_matrix = np.linalg.inv(key_matrix).astype(int) % 26
+
+    encrypted_blocks = key_matrix.dot(text_blocks) % 26
+    return "".join(chr(int(num) + ord('A')) for num in encrypted_blocks.T.flatten())
+
+# ===== VIGENÈRE CIPHER =====
+def vigenere_cipher(text, key, encrypt=True):
+    key = key.upper()
+    key_repeat = (key * ((len(text) // len(key)) + 1))[:len(text)]
+    result = ""
+    shift = 1 if encrypt else -1
+
+    for t, k in zip(text.upper(), key_repeat):
+        if t.isalpha():
+            result += chr((ord(t) - ord('A') + shift * (ord(k) - ord('A'))) % 26 + ord('A'))
+        else:
+            result += t
+
+    return result
+
+# ===== TEST CASES =====
+text = "HELLO"
+caesar_encrypted = caesar_cipher(text, 3)
+caesar_decrypted = caesar_cipher(caesar_encrypted, 3, False)
+
+playfair_key = "KEYWORD"
+playfair_encrypted = playfair_cipher(text, playfair_key)
+playfair_decrypted = playfair_cipher(playfair_encrypted, playfair_key, False)
+
+hill_key = [[6, 24], [1, 13]]  # Example invertible 2x2 matrix
+hill_encrypted = hill_cipher(text[:2], hill_key)
+hill_decrypted = hill_cipher(hill_encrypted, hill_key, False)
+
+vigenere_key = "KEY"
+vigenere_encrypted = vigenere_cipher(text, vigenere_key)
+vigenere_decrypted = vigenere_cipher(vigenere_encrypted, vigenere_key, False)
+
+# ===== OUTPUT =====
+print("\n=== CIPHER RESULTS ===")
+print(f"Caesar Cipher: {caesar_encrypted} -> {caesar_decrypted}")
+print(f"Playfair Cipher: {playfair_encrypted} -> {playfair_decrypted}")
+print(f"Hill Cipher: {hill_encrypted} -> {hill_decrypted}")
+print(f"Vigenère Cipher: {vigenere_encrypted} -> {vigenere_decrypted}")
+
+
+ 
