@@ -1,0 +1,31 @@
+import psutil 
+import time 
+import csv 
+def log_connections(log_file="network_connections.csv"): 
+with open(log_file, mode='w', newline='') as file: 
+writer = csv.writer(file) 
+writer.writerow(["Timestamp", "PID", "Local Address", "Remote 
+Address", "Status", "Process Name"]) 
+ 
+while True: 
+for conn in psutil.net_connections(kind='inet'): 
+try: 
+laddr = f"{conn.laddr.ip}:{conn.laddr.port}" if 
+conn.laddr else "N/A" 
+raddr = f"{conn.raddr.ip}:{conn.raddr.port}" if 
+conn.raddr else "N/A" 
+process = psutil.Process(conn.pid).name() if conn.pid 
+else "N/A" 
+writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), 
+conn.pid, laddr, raddr, conn.status, process]) 
+except (psutil.NoSuchProcess, psutil.AccessDenied): 
+continue 
+time.sleep(5) # Log every 5 seconds 
+ 
+if  name  == " main ": 
+log_connections() 
+
+//output
+Logging network connections to network_connections_log.csv...
+['2025-04-03 12:34:00', '1234', 'chrome.exe', '192.168.1.100', '51543', '172.217.14.206', '443', 'ESTABLISHED']
+['2025-04-03 12:34:05', '5678', 'python.exe', '127.0.0.1', '8080', 'N/A', 'N/A', 'LISTEN']
