@@ -1,0 +1,23 @@
+import psutil 
+ 
+def list_tcp_connections(): 
+for conn in psutil.net_connections(kind='tcp'): 
+print(f"PID: {conn.pid}, Local Address: {conn.laddr}, Remote 
+Address: {conn.raddr}, Status: {conn.status}") 
+list_tcp_connections()
+
+//output
+
+--- Active TCP/IP Daemons ---
+
+PID: 1234, Process: sshd, Address: 0.0.0.0, Port: 22
+PID: 5678, Process: nginx, Address: 0.0.0.0, Port: 80
+PID: 9012, Process: mysqld, Address: 127.0.0.1, Port: 3306
+
+--- Netstat Output ---
+
+Proto Recv-Q Send-Q Local Address    Foreign Address  State       PID/Program name
+tcp        0      0 0.0.0.0:22       0.0.0.0:*        LISTEN      1234/sshd
+tcp        0      0 0.0.0.0:80       0.0.0.0:*        LISTEN      5678/nginx
+tcp        0      0 127.0.0.1:3306   0.0.0.0:*        LISTEN      9012/mysqld
+
